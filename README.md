@@ -18,3 +18,13 @@ This repository contains nice to have formulas and functions that can greatly sp
 ### Formulas
 
 ### Functions
+
+
+### Old school Git
+
+```git
+    git add .
+    git status
+    git commit -m "Your commit message"
+    git push
+```
