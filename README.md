@@ -12,6 +12,7 @@ This repository contains nice to have formulas and functions that can greatly sp
 1. columnToString(column)
 1. columnLetterToInt(column)
 1. CreateOutlookEmail(To, Cc, Bcc, Subject, Body as string, Attachment[] as string)
+1. Two Way Lookup - Formula is =INDEX(value_lookup,MATCH(row_lookup_value,row_lookup_range,0),MATCH(col_lookup_value,col_lookup_range,0))
 
 ## Table of Contents
 
