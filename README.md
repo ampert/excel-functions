@@ -4,6 +4,8 @@ This repository contains nice to have formulas and functions that can greatly sp
 
 ## List of TODOs
 
+1. toolModeOn() - lock, removes excel clutters like headers and ribbon
+1. toolModeOff() - reverts toolmodeOn. best placed when workbook is closed. always save the workbook
 1. filepathToCell(cell as string)
 1. fileopenFromCell(cell as string)
 1. copyFileFromCells(srcCell as string, destCell as string)
