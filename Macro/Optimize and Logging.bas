@@ -6,6 +6,7 @@ Sub optilog(processName As String, start As Boolean)
         Application.DisplayStatusBar = False
         Application.Calculation = xlCalculationManual
         Application.EnableEvents = False
+        Application.DisplayAlerts = False
         ThisWorkbook.Sheets("LOGS").Range("A" & lastrow).Value = processName
         ThisWorkbook.Sheets("LOGS").Range("B" & lastrow).Value = Now
     Else
@@ -13,6 +14,7 @@ Sub optilog(processName As String, start As Boolean)
         Application.DisplayStatusBar = True
         Application.Calculation = xlCalculationAutomatic
         Application.EnableEvents = True
+        Application.DisplayAlerts = True
         lastrow = lastrow - 1
         ThisWorkbook.Sheets("LOGS").Range("C" & lastrow).Value = Now
     End If
@@ -26,11 +28,13 @@ Sub optimize(start As Boolean)
         Application.DisplayStatusBar = False
         Application.Calculation = xlCalculationManual
         Application.EnableEvents = False
+        Application.DisplayAlerts = False
     Else
         Application.ScreenUpdating = True
         Application.DisplayStatusBar = True
         Application.Calculation = xlCalculationAutomatic
         Application.EnableEvents = True
+        Application.DisplayAlerts = True
     End If
 
 End Sub
