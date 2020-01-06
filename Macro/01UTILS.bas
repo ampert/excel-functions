@@ -1,33 +1,34 @@
-Sub CopyPaste_Ex2()
-    Sheets("Source").Range("A1:E10").Copy Destination:=Sheets("Destination").Range("A1")
-End Sub
-
-Sub createNewSheet(shtName As String, startSheet As Boolean)
-    Dim xWs As Worksheet
-    
-    If startSheet Then
-        Set xWs = Sheets.Add(Before:=Sheets(1))
-    Else
-        Set xWs = Sheets.Add(After:=Sheets(Worksheets.Count))
-    End If
-    
-    xWs.Name = shtName
-    
-End Sub
-
-Function getlastRow(shtName As String, startCell As String) As Integer
+Function getlastRow(shtName As String, columnRef As String) As Integer
 
     With ThisWorkbook.Sheets(shtName)
-        getlastRow = .Range(startCell & .Rows.Count).End(xlUp).Row
+            getlastRow = .Range(startCell & .Rows.Count).End(xlUp).Row
     End With
 
 End Function
 
-Function lastColumn(shtName As String, startCell As String) As Integer
-    
-    lastColumn = Sheets(shtName).Range(startCell).CurrentRegion.Columns.Count
+Function getlastColumn(shtName As String, columnRef As String) As String
+
+    Column = Sheets(shtName).Range(startCell & "1").CurrentRegion.Columns.Count
+    getlastColumn = Split(Cells(1, Column).Address, "$")(1)
 
 End Function
+
+Function openExcelFile() as Workbook
+
+    Dim fd As Office.FileDialog
+    Set fd = Application.FileDialog(msoFileDialogFilePicker)
+
+    Dim filePath as String
+    filePath = fd.SelectedItems(1)
+
+    openExcelFile = Workbooks.Open Filename:=filePath
+
+End Function
+
+
+Sub CopyPaste_Ex2()
+    Sheets("Source").Range("A1:E10").Copy Destination:=Sheets("Destination").Range("A1")
+End Sub
 
 Sub copyValues(srcSht As String, srcCol As String, destSht As String, destCol As String)
 
@@ -38,17 +39,10 @@ Sub copyValues(srcSht As String, srcCol As String, destSht As String, destCol As
 
 End Sub
 
-Sub deleteColumn(shtName As String, delCol As Range)
-
-    Dim n_delCol As String: n_delCol = delCol & ":" & delCol
-    ThisWorkbook.Sheets(shtName).Range(n_delCol).Delete
-
-End Sub
-
 Function columnToInt(columnLetter As String) As Integer
 
     columnToInt = Range(columnLetter & 1).column
-    
+
 End Function
 
 Sub filter(shtName As String, filterCol As String, filterVal As String)
