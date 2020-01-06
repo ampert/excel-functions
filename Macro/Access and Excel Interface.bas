@@ -1,3 +1,7 @@
+References:
+OLE Automation
+Microsoft ActiveX Data Objects 6.1 Library
+
 Sub RunQuery(accessFilePath As String, sqlQuery As String)
 
     Set cn = New ADODB.Connection
