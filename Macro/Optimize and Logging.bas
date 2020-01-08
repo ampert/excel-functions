@@ -7,6 +7,7 @@ Sub optilog(processName As String, start As Boolean)
         Application.Calculation = xlCalculationManual
         Application.EnableEvents = False
         Application.DisplayAlerts = False
+        Application.AskToUpdateLinks = False
         ThisWorkbook.Sheets("LOGS").Range("A" & lastrow).Value = processName
         ThisWorkbook.Sheets("LOGS").Range("B" & lastrow).Value = Now
     Else
@@ -15,6 +16,7 @@ Sub optilog(processName As String, start As Boolean)
         Application.Calculation = xlCalculationAutomatic
         Application.EnableEvents = True
         Application.DisplayAlerts = True
+        Application.AskToUpdateLinks = True
         lastrow = lastrow - 1
         ThisWorkbook.Sheets("LOGS").Range("C" & lastrow).Value = Now
     End If
