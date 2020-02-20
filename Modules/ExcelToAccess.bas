@@ -2,35 +2,139 @@ Attribute VB_Name = "ExcelToAccess"
 '==============================================================================
 'TODO
 '==============================================================================
-' 1. Stand Alone Module and Initialization
-' 2. Run log
-' 3. User input for table name
-
-
+' 1. Beautification of GUI
+' 2. Instructions / SWI
 
 '==============================================================================
-'RUN
+'REQUIREMENTS AND LIMITATIONS
 '==============================================================================
+' 1. Excel file must have the sheet with the data active upon open
+' 2. Column names must be in the first row
+' 3. Column names should not be duplicated
+' 4. First row should not be merged
+
+'==============================================================================
+'VARIABLES
+'==============================================================================
+
+'References:
+'Microsoft Office 16.0 Object Library
+
+Dim accessPath As String
+Dim reportDate As Date
+Dim tblName As String
+Dim password As String
+
+Sub VarInit()
+    accessPath = ThisWorkbook.Sheets(1).Range("D3")
+    reportDate = ThisWorkbook.Sheets(1).Range("D6")
+    tblName = ThisWorkbook.Sheets(1).Range("D7")
+    password = "p@ssW0rd"
+End Sub
+
+'==============================================================================
+'BUTTONS
+'==============================================================================
+
+Sub FactoryReset()
+    choice = MsgBox("This module will now reset this file and delete everything. Do you wish to continue?" _
+        , vbYesNo + vbExclamation, "Factory Reset")
+    
+    If choice = vbNo Then
+        Exit Sub
+    End If
+    
+    Call optimize(True)
+    
+    Call DeleteAllSheets
+    
+    With ThisWorkbook.Sheets(1)
+        .Cells.Interior.Color = vbWhite
+        .Range("B3").Value = "Database Path"
+        .Range("B6").Value = "Reporting Date"
+        .Range("B7").Value = "Table Name"
+        
+        'Report Date Validation
+        .Range("D6").Validation.Add Type:=xlValidateDate, AlertStyle:=xlValidAlertStop, Operator:= _
+        xlBetween, Formula1:="1/1/2020", Formula2:="1/1/2050"
+        
+        'Table Name Validation
+        .Range("D7").Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:= _
+        xlBetween, Formula1:= _
+        "OTC_RAW" & "," & _
+        "PTP_RAW" & "," & _
+        "AGENT_RAW" & "," & _
+        "CCCI_RAW"
+        
+        'Map Button
+        .Buttons.Add(450, 27, 120, 30.5).Select
+        Selection.Name = "Map_DB"
+        Selection.Characters.Text = "Map Database"
+        Selection.OnAction = "getAccessPath"
+        
+        'Upload Button
+        .Buttons.Add(160, 150, 120, 30.5).Select
+        Selection.Name = "Upload"
+        Selection.Characters.Text = "Upload To Database"
+        Selection.OnAction = "UploadExcelToAccess"
+        
+        .Range("A1").Select
+    End With
+    
+    Call optimize(False)
+    
+End Sub
 
 Sub UploadExcelToAccess()
     Call optimize(True)
     
+    Call VarInit
+    
+    If reportDate = 0 Then
+        MsgBox "Report Date is required"
+        GoTo blank
+    ElseIf tblName = "" Then
+        MsgBox "Table Name is required"
+        GoTo blank
+    End If
+    
     Dim wbData As Workbook: Set wbData = openExcelFile()
     wbData.Activate
     
-    Dim tblName As String: tblName = "Customer_HD"
-    
-    Call RunQueries(getAccessPath, ExcelToAccessSQL(tblName))
+    Call RunQueries(accessPath, ExcelToAccessSQL(tblName))
     
     wbData.Close
 
     MsgBox ("Upload Complete")
 
+blank:
     Call optimize(False)
 End Sub
 
+Sub getAccessPath()
+    
+    On Error GoTo reason
+    
+    Dim fd As Office.FileDialog
+    Set fd = Application.FileDialog(msoFileDialogFilePicker)
+    
+    With fd.Filters
+        .Clear
+        .Add "Access files", "*.accdb"
+    End With
+    
+    fd.Show
+    ThisWorkbook.Sheets(1).Range("D3").Value = fd.SelectedItems(1)
+
+    Exit Sub
+    
+reason:
+    MsgBox "No file selected"
+    End
+End Sub
+
 '==============================================================================
-'MAIN
+'MAIN FUNCTION
 '==============================================================================
 
 Function ExcelToAccessSQL(tblName As String) As String()
@@ -45,7 +149,7 @@ Function ExcelToAccessSQL(tblName As String) As String()
     'Partition since Excel is limited to 60,000 insert
     Dim part As Integer: part = Application.WorksheetFunction.RoundUp(lastRow / 60000, 0)
     Dim sqlstring() As String
-    ReDim sqlstring(part + 3) As String
+    ReDim sqlstring(part + 4) As String
     
     'Drop / Create Table Scripts
     sqlstring(0) = "DROP TABLE [" & tblName & "]"
@@ -58,6 +162,9 @@ Function ExcelToAccessSQL(tblName As String) As String()
     Next i
     
     sqlstring(1) = Left(sqlstring(1), Len(sqlstring(1)) - 2) & ")"
+    
+    '!!DEBUG: Copy Create Table script in Cell A1
+    'ThisWorkbook.Sheets(1).Range("A1").Value = sqlstring(1)
     
     Dim sqlselect As String: sqlselect = "SELECT "
     Dim sqlinsert As String: sqlinsert = "INSERT INTO " & tblName & " "
@@ -98,11 +205,40 @@ Function ExcelToAccessSQL(tblName As String) As String()
         
     End If
     
-    'Add [UploadDate] to the data
+    'Add [UploadDate] and [ReportDate] to the data
     sqlstring(part + 2) = "ALTER TABLE " & tblName & " ADD COLUMN [UploadDate] DATE"
-    sqlstring(part + 3) = "UPDATE " & tblName & " Set [UploadDate] = #" & Format(Now, "mm/dd/yyyy") & "#"
+    sqlstring(part + 3) = "ALTER TABLE " & tblName & " ADD COLUMN [ReportDate] DATE"
+    sqlstring(part + 4) = "UPDATE " & tblName & " Set [UploadDate] = #" & Format(Now, "mm/dd/yyyy") & _
+        "#,[ReportDate] = #" & Format(reportDate, "mm/dd/yyyy") & "#"
     
     ExcelToAccessSQL = sqlstring
+End Function
+
+'==============================================================================
+'UTILITY FUNCTIONS
+'==============================================================================
+
+Function openExcelFile() As Workbook
+
+    MsgBox ("Please select source excel file")
+    On Error GoTo reason
+    
+    Dim fd As Office.FileDialog
+    Set fd = Application.FileDialog(msoFileDialogFilePicker)
+    
+    With fd.Filters
+        .Clear
+        .Add "Excel files", "*.xlsx;*.xls;*.xlsm;*.xlsb"
+    End With
+    
+    fd.Show
+    Set openExcelFile = Workbooks.Open(fd.SelectedItems(1), False)
+    
+    Exit Function
+    
+reason:
+    MsgBox "No file selected"
+    End
 End Function
 
 Sub RunQueries(accessFilePath As String, sqlstring() As String)
@@ -132,58 +268,9 @@ reason:
 
 End Sub
 
-'==============================================================================
-'FILE DIALOG
-'==============================================================================
-
-Function openExcelFile() As Workbook
-
-    MsgBox ("Please select source excel file")
-    On Error GoTo reason
-    
-    Dim fd As Office.FileDialog
-    Set fd = Application.FileDialog(msoFileDialogFilePicker)
-    
-    With fd.Filters
-        .Clear
-        .Add "Excel files", "*.xlsx;*.xls;*.xlsm;*.xlsb"
-    End With
-    
-    fd.Show
-    Set openExcelFile = Workbooks.Open(fd.SelectedItems(1), False)
-    
-    Exit Function
-    
-reason:
-    MsgBox "No file selected"
-    End
-End Function
-
-Function getAccessPath() As String
-    
-    MsgBox ("Please select destination access file")
-    
-    Dim fd As Office.FileDialog
-    Set fd = Application.FileDialog(msoFileDialogFilePicker)
-    
-    With fd.Filters
-        .Clear
-        .Add "Access files", "*.accdb"
-    End With
-    
-    fd.Show
-    getAccessPath = fd.SelectedItems(1)
-
-End Function
-
-'==============================================================================
-'UTILITIES
-'==============================================================================
-
 Function getlastRow(columnRef As String) As Long
 
     With ActiveWorkbook.ActiveSheet
-            x = .Rows.Count
             getlastRow = .Range(columnRef & .Rows.Count).End(xlUp).Row
     End With
 
@@ -222,13 +309,32 @@ Sub optimize(start As Boolean)
 
 End Sub
 
+Sub DeleteAllSheets()
+    Application.DisplayAlerts = False
+    
+    ThisWorkbook.Sheets(1).Activate
+    
+    For Each sht In ThisWorkbook.Worksheets
+        If sht.Name = ThisWorkbook.ActiveSheet.Name Then
+            sht.Cells.Delete
+        Else
+            sht.Delete
+        End If
+    Next sht
+        
+    ThisWorkbook.Sheets(1).Name = "Sheet1"
+    ThisWorkbook.VBProject.VBComponents(Sheets(1).CodeName).Name = "Sheet1"
+    
+    Application.DisplayAlerts = True
+End Sub
+
 '==============================================================================
 'LICENSE
 '==============================================================================
 
 'MIT License
 '
-'Copyright (c) 2019 Ampert
+'Copyright (c) 2019 Ampert (glenn.marvin.l.lim@accenture.com)
 '
 'Permission is hereby granted, free of charge, to any person obtaining a copy
 'of this software and associated documentation files (the "Software"), to deal
