@@ -1,9 +1,10 @@
-Attribute VB_Name = "ExcelToAccess"
 '==============================================================================
-'TODO
+'EXCEL ACCESS LOADER
 '==============================================================================
-' 1. Beautification of GUI
-' 2. Instructions / SWI
+'This module will take any excel file and load it to access
+'Import this module to any excel file and run Install()
+'Add the following references below:
+'- Microsoft Office 16.0 Object Library
 
 '==============================================================================
 'REQUIREMENTS AND LIMITATIONS
@@ -11,34 +12,30 @@ Attribute VB_Name = "ExcelToAccess"
 ' 1. Excel file must have the sheet with the data active upon open
 ' 2. Column names must be in the first row
 ' 3. Column names should not be duplicated
-' 4. First row should not be merged
+' 4. No cell must be merged
+' 5. First column should not contain blanks
 
 '==============================================================================
 'VARIABLES
 '==============================================================================
 
-'References:
-'Microsoft Office 16.0 Object Library
-
 Dim accessPath As String
 Dim reportDate As Date
 Dim tblName As String
-Dim password As String
 
 Sub VarInit()
     accessPath = ThisWorkbook.Sheets(1).Range("D3")
-    reportDate = ThisWorkbook.Sheets(1).Range("D6")
-    tblName = ThisWorkbook.Sheets(1).Range("D7")
-    password = "p@ssW0rd"
+    reportDate = ThisWorkbook.Sheets(1).Range("D7")
+    tblName = ThisWorkbook.Sheets(1).Range("D9")
 End Sub
 
 '==============================================================================
-'BUTTONS
+'INSTALL
 '==============================================================================
 
-Sub FactoryReset()
-    choice = MsgBox("This module will now reset this file and delete everything. Do you wish to continue?" _
-        , vbYesNo + vbExclamation, "Factory Reset")
+Sub Install()
+    choice = MsgBox("All data on this excel file will be cleared. Do you wish to continue?" _
+        , vbYesNo + vbExclamation, "Install Excel Access Loader")
     
     If choice = vbNo Then
         Exit Sub
@@ -49,17 +46,40 @@ Sub FactoryReset()
     Call DeleteAllSheets
     
     With ThisWorkbook.Sheets(1)
+        .Columns("C:C").ColumnWidth = 1.5
+        .Columns("B:B").ColumnWidth = 12.8
+        .Columns("D:D").ColumnWidth = 10
         .Cells.Interior.Color = vbWhite
+        
+        .Range("B3:B5").Merge
         .Range("B3").Value = "Database Path"
-        .Range("B6").Value = "Reporting Date"
-        .Range("B7").Value = "Table Name"
+        .Range("B7").Value = "Reporting Date"
+        .Range("B9").Value = "Table Name"
+        
+        'Title Box Color, Border, Alignment
+        With .Range("B3:B5,B7,B9")
+            .Borders.LineStyle = xlContinuous
+            .HorizontalAlignment = xlCenter
+            .VerticalAlignment = xlCenter
+            .Font.Bold = True
+            .Interior.Color = RGB(95, 155, 213)
+            .Font.Color = RGB(255, 255, 255)
+        End With
+        
+        'Data Box Border and Alignment
+        .Range("D3:I5").Merge
+        With .Range("D3:I5,D7,D9")
+            .Borders.LineStyle = xlContinuous
+            .HorizontalAlignment = xlCenter
+            .VerticalAlignment = xlCenter
+        End With
         
         'Report Date Validation
-        .Range("D6").Validation.Add Type:=xlValidateDate, AlertStyle:=xlValidAlertStop, Operator:= _
+        .Range("D7").Validation.Add Type:=xlValidateDate, AlertStyle:=xlValidAlertStop, Operator:= _
         xlBetween, Formula1:="1/1/2020", Formula2:="1/1/2050"
         
         'Table Name Validation
-        .Range("D7").Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:= _
+        .Range("D9").Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:= _
         xlBetween, Formula1:= _
         "OTC_RAW" & "," & _
         "PTP_RAW" & "," & _
@@ -67,7 +87,7 @@ Sub FactoryReset()
         "CCCI_RAW"
         
         'Map Button
-        .Buttons.Add(450, 27, 120, 30.5).Select
+        .Buttons.Add(450, 35, 120, 30.5).Select
         Selection.Name = "Map_DB"
         Selection.Characters.Text = "Map Database"
         Selection.OnAction = "getAccessPath"
@@ -83,7 +103,12 @@ Sub FactoryReset()
     
     Call optimize(False)
     
+    MsgBox "Installation Complete"
 End Sub
+
+'==============================================================================
+'BUTTONS
+'==============================================================================
 
 Sub UploadExcelToAccess()
     Call optimize(True)
@@ -134,7 +159,7 @@ reason:
 End Sub
 
 '==============================================================================
-'MAIN FUNCTION
+'MAIN FUNCTIONS
 '==============================================================================
 
 Function ExcelToAccessSQL(tblName As String) As String()
@@ -220,8 +245,8 @@ End Function
 
 Function openExcelFile() As Workbook
 
-    MsgBox ("Please select source excel file")
-    On Error GoTo reason
+    MsgBox ("Please select excel file to load")
+    On Error GoTo blank
     
     Dim fd As Office.FileDialog
     Set fd = Application.FileDialog(msoFileDialogFilePicker)
@@ -236,14 +261,14 @@ Function openExcelFile() As Workbook
     
     Exit Function
     
-reason:
+blank:
     MsgBox "No file selected"
     End
 End Function
 
 Sub RunQueries(accessFilePath As String, sqlstring() As String)
 
-    On Error GoTo reason
+    On Error GoTo blank
     Dim scn As String: scn = "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" & accessFilePath
     Set cn = CreateObject("ADODB.Connection")
     cn.Open scn
@@ -255,7 +280,7 @@ Sub RunQueries(accessFilePath As String, sqlstring() As String)
     
     Exit Sub
 
-reason:
+blank:
     If Err.Number <> -2147217900 Then
         MsgBox (Err.Description)
         End
@@ -334,7 +359,7 @@ End Sub
 
 'MIT License
 '
-'Copyright (c) 2019 Ampert (glenn.marvin.l.lim@accenture.com)
+'Copyright (c) 2019 Ampert - glenn.marvin.l.lim@accenture.com
 '
 'Permission is hereby granted, free of charge, to any person obtaining a copy
 'of this software and associated documentation files (the "Software"), to deal
