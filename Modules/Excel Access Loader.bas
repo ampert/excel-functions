@@ -1,10 +1,7 @@
 '==============================================================================
 'EXCEL ACCESS LOADER
 '==============================================================================
-'This module will take any excel file and load it to access
-'Import this module to any excel file and run Install()
-'Add the following references below:
-'- Microsoft Office 16.0 Object Library
+'Take any excel file and load it to access with just a few clicks!
 
 '==============================================================================
 'REQUIREMENTS AND LIMITATIONS
@@ -14,6 +11,26 @@
 ' 3. Column names should not be duplicated
 ' 4. No cell must be merged
 ' 5. First column should not contain blanks
+
+'==============================================================================
+'INSTALLATION GUIDE
+'==============================================================================
+'Import this module to any excel file and add the following references below:
+'   - Microsoft Office 16.0 Object Library
+'Edit constants for your requirements
+'Run Install()
+
+'==============================================================================
+'CONSTANTS
+'==============================================================================
+Const startReportDate = "1/1/2020"
+Const endReportDate = "1/1/2050"
+
+Const tableList = _
+"TABLE_1" & "," & _
+"TABLE_2" & "," & _
+"TABLE_3" & "," & _
+"TABLE_4"
 
 '==============================================================================
 'VARIABLES
@@ -76,15 +93,11 @@ Sub Install()
         
         'Report Date Validation
         .Range("D7").Validation.Add Type:=xlValidateDate, AlertStyle:=xlValidAlertStop, Operator:= _
-        xlBetween, Formula1:="1/1/2020", Formula2:="1/1/2050"
+        xlBetween, Formula1:=startReportDate, Formula2:=endReportDate
         
         'Table Name Validation
         .Range("D9").Validation.Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Operator:= _
-        xlBetween, Formula1:= _
-        "OTC_RAW" & "," & _
-        "PTP_RAW" & "," & _
-        "AGENT_RAW" & "," & _
-        "CCCI_RAW"
+        xlBetween, Formula1:=tableList
         
         'Map Button
         .Buttons.Add(450, 35, 120, 30.5).Select
