@@ -65,7 +65,7 @@ Sub Install()
     With ThisWorkbook.Sheets(1)
         .Columns("C:C").ColumnWidth = 1.5
         .Columns("B:B").ColumnWidth = 12.8
-        .Columns("D:D").ColumnWidth = 10
+        .Columns("D:D").ColumnWidth = 12.8
         .Cells.Interior.Color = vbWhite
         
         .Range("B3:B5").Merge
@@ -89,6 +89,7 @@ Sub Install()
             .Borders.LineStyle = xlContinuous
             .HorizontalAlignment = xlCenter
             .VerticalAlignment = xlCenter
+            .WrapText = True
         End With
         
         'Report Date Validation
@@ -100,7 +101,7 @@ Sub Install()
         xlBetween, Formula1:=tableList
         
         'Map Button
-        .Buttons.Add(450, 35, 120, 30.5).Select
+        .Buttons.Add(460, 35, 120, 30.5).Select
         Selection.Name = "Map_DB"
         Selection.Characters.Text = "Map Database"
         Selection.OnAction = "getAccessPath"
@@ -226,14 +227,16 @@ Function ExcelToAccessSQL(tblName As String) As String()
     ElseIf lastRow > 60000 Then
         
         sqlsheet = "[" & srcWS.Name & "$A1:" & lastColumn & 60001 & "]"
+        srcWS.Range("A1:" & lastColumn & 60001).NumberFormat = "@"
         sqlstring(2) = sqlinsert & sqlselect & sqlfrom & sqlsheet
         
         Dim tempWS As Worksheet
         For i = 3 To part + 1
             Set tempWS = srcWB.Sheets.Add
             srcWS.Range("A1:" & lastColumn & "1").Copy tempWS.Range("A1")
-            srcWS.Range("A" & (60001 * (i - 1)) + 1 & ":" & lastColumn & (60001 * i)).Copy
+            srcWS.Range("A" & (60001 * (i - 2)) + 1 & ":" & lastColumn & (60001 * (i - 1))).Copy    
             tempWS.Range("A2").PasteSpecial xlPasteValuesAndNumberFormats
+            Selection.NumberFormat = "@"
             Application.CutCopyMode = False
             lastRow = tempWS.Cells(Rows.Count, 1).End(xlUp).Row
             
