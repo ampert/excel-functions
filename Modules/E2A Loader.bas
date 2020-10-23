@@ -1,16 +1,16 @@
 '==============================================================================
-'EXCEL ACCESS LOADER
+'EXCEL TO ACCESS LOADER
 '==============================================================================
 'Take any excel file and load it to access with just a few clicks!
 
 '==============================================================================
 'REQUIREMENTS AND LIMITATIONS
 '==============================================================================
-' 1. Excel file must have the sheet with the data active upon open
-' 2. Column names must be in the first row
-' 3. Column names should not be duplicated
-' 4. No cell must be merged
-' 5. First column should not contain blanks
+'1. Excel file must have the sheet with the data active upon open
+'2. Column names must be in the first row
+'3. Column names should not be duplicated
+'4. No cell must be merged
+'5. First column should not contain blanks
 
 '==============================================================================
 'INSTALLATION GUIDE
@@ -173,7 +173,7 @@ reason:
 End Sub
 
 '==============================================================================
-'MAIN FUNCTIONS
+'MAIN
 '==============================================================================
 
 Function ExcelToAccessSQL(tblName As String) As String()
@@ -256,7 +256,7 @@ Function ExcelToAccessSQL(tblName As String) As String()
 End Function
 
 '==============================================================================
-'UTILITY FUNCTIONS
+'UTILITIES
 '==============================================================================
 
 Function openExcelFile() As Workbook
